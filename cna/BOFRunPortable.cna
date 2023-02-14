@@ -62,7 +62,7 @@ sub runAnyWhere{
 
 
   # 900k chunks sent to leave room for protocol data too
-  $chunkSize = 1024 * 100 ;
+  $chunkSize = 1024 * 900 ;
 
   # must split shellcode
   $numChunks = $total_size / $chunkSize;

